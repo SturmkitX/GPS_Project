@@ -1,0 +1,3 @@
+#!/bin/sh
+g++ -O2 -std=c++11 -lGL -lGLEW -lglfw -o $@ *.o
+

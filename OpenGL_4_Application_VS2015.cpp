@@ -48,7 +48,7 @@ glm::vec3 lightColor;
 GLuint lightColorLoc;
 
 gps::Camera myCamera(glm::vec3(0.0f, 1.0f, 2.5f), glm::vec3(0.0f, 0.0f, 0.0f));
-GLfloat cameraSpeed = 0.01f;
+GLfloat cameraSpeed = 1.0f;
 
 bool pressedKeys[1024];
 GLfloat angle;
@@ -57,6 +57,8 @@ GLfloat lightAngle;
 gps::Model3D myModel;
 gps::Model3D ground;
 gps::Model3D lightCube;
+gps::Model3D island;
+
 gps::Shader myCustomShader;
 gps::Shader lightShader;
 gps::Shader depthMapShader;
@@ -68,6 +70,8 @@ gps::SkyBox mySkyBox;
 gps::Shader skyboxShader;
 
 GLfloat delta_x = 0.0f, delta_y = 0.0f;
+GLdouble last_time, act_time;
+GLfloat lightDir_offset = 0.0f;
 
 GLenum glCheckError_(const char *file, int line)
 {
@@ -130,7 +134,7 @@ void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int
 
 void mouseCallback(GLFWwindow* window, double xpos, double ypos)
 {
-	std::cout << ypos << '\n';
+	//std::cout << ypos << '\n';
 	delta_x = (GLfloat)xpos;
 
 	// force the delta_y interval
@@ -294,6 +298,7 @@ void initModels()
 	myModel = gps::Model3D("objects/nanosuit/nanosuit.obj", "objects/nanosuit/");
 	ground = gps::Model3D("objects/ground/ground.obj", "objects/ground/");
 	lightCube = gps::Model3D("objects/cube/cube.obj", "objects/cube/");
+	island = gps::Model3D("objects/tropical_island/tropical_island.obj", "objects/tropical_island/");
 }
 
 void initShaders()
@@ -320,7 +325,7 @@ void initUniforms()
 	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
 	//set the light direction (direction towards the light)
-	lightDir = glm::vec3(0.0f, 1.0f, 2.0f);
+	lightDir = glm::vec3(0.0f, 3.0f, 6.0f);
 	lightDirLoc = glGetUniformLocation(myCustomShader.shaderProgram, "lightDir");
 	glUniform3fv(lightDirLoc, 1, glm::value_ptr(lightDir));
 
@@ -444,8 +449,12 @@ void renderScene()
 
 	myModel.Draw(myCustomShader);
 
+	model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -50.0f, 0.0f));
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+	island.Draw(myCustomShader);
+
 	//create model matrix for ground
-	model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+	model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -250.0f, 0.0f));
 	//send model matrix data to shader
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
@@ -454,7 +463,14 @@ void renderScene()
 	//send normal matrix data to shader
 	glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
 
-	ground.Draw(myCustomShader);
+	//ground.Draw(myCustomShader);
+
+	lightAngle += 0.1f;
+	if (lightAngle > 360.0f)
+		lightAngle -= 360.0f;
+	glm::vec3 lightDirTr = glm::vec3(glm::rotate(glm::mat4(1.0f), glm::radians(lightAngle), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::vec4(lightDir, 1.0f));
+	myCustomShader.useShaderProgram();
+	glUniform3fv(lightDirLoc, 1, glm::value_ptr(lightDirTr));
 
 	//draw a white cube around the light
 
@@ -462,14 +478,14 @@ void renderScene()
 
 	glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
 
-	model = glm::rotate(glm::mat4(1.0f), glm::radians(lightAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+	model = glm::rotate(glm::mat4(1.0f), glm::radians(lightAngle), glm::vec3(1.0f, 0.0f, 0.0f));
 	model = glm::translate(model, lightDir);
 	model = glm::scale(model, glm::vec3(0.05f, 0.05f, 0.05f));
 	glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
 	lightCube.Draw(lightShader);
 
-	mySkyBox.Draw(skyboxShader, view, projection);
+	//mySkyBox.Draw(skyboxShader, view, projection);
 }
 
 int main(int argc, const char * argv[]) {
@@ -487,8 +503,11 @@ int main(int argc, const char * argv[]) {
 	glfwGetCursorPos(glWindow, &x, &x);
 	delta_x = (GLfloat)x;
 	delta_y = (GLfloat)y;
+	act_time = last_time = glfwGetTime();
 	while (!glfwWindowShouldClose(glWindow)) {
 		renderScene();
+
+
 
 		glfwPollEvents();
 		glfwSwapBuffers(glWindow);
