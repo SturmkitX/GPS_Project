@@ -9,7 +9,7 @@
 #include "Camera.hpp"
 
 namespace gps {
-    
+
     Camera::Camera(glm::vec3 cameraPosition, glm::vec3 cameraTarget)
     {
         this->cameraPosition = cameraPosition;
@@ -17,7 +17,7 @@ namespace gps {
         this->cameraDirection = glm::normalize(cameraTarget - cameraPosition);
         this->cameraRightDirection = glm::normalize(glm::cross(this->cameraDirection, glm::vec3(0.0f, 1.0f, 0.0f)));
     }
-    
+
     glm::mat4 Camera::getViewMatrix()
     {
         return glm::lookAt(cameraPosition, cameraPosition + cameraDirection , glm::vec3(0.0f, 1.0f, 0.0f));
@@ -27,31 +27,40 @@ namespace gps {
 	{
 		return cameraTarget;
 	}
-    
+
     void Camera::move(MOVE_DIRECTION direction, float speed)
     {
         switch (direction) {
             case MOVE_FORWARD:
                 cameraPosition += cameraDirection * speed;
                 break;
-                
+
             case MOVE_BACKWARD:
                 cameraPosition -= cameraDirection * speed;
                 break;
-                
+
             case MOVE_RIGHT:
                 cameraPosition += cameraRightDirection * speed;
                 break;
-                
+
             case MOVE_LEFT:
                 cameraPosition -= cameraRightDirection * speed;
                 break;
         }
     }
-    
+
     void Camera::rotate(float pitch, float yaw)
     {
+        // this->cameraTarget = glm::vec3(0.0f, pitch * cameraRightDirection.y, yaw * cameraDirection.z);
+        // this->cameraDirection = glm::normalize(cameraTarget - cameraPosition);
+        // this->cameraRightDirection = glm::normalize(glm::cross(this->cameraDirection, glm::vec3(0.0f, 1.0f, 0.0f)));
 
+        glm::vec3 front;
+        front.x = glm::cos(glm::radians(yaw)) * glm::cos(glm::radians(pitch));
+        front.y = glm::sin(glm::radians(pitch));
+        front.z = glm::sin(glm::radians(yaw)) * glm::cos(glm::radians(pitch));
+        cameraDirection = glm::normalize(front);
+        cameraRightDirection = glm::normalize(glm::cross(cameraDirection, glm::vec3(0.0f, 1.0f, 0.0f)));
     }
-    
+
 }

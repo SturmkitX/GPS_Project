@@ -70,6 +70,8 @@ gps::SkyBox mySkyBox;
 gps::Shader skyboxShader;
 
 GLfloat delta_x = 0.0f, delta_y = 0.0f;
+GLfloat start_x, start_y;
+GLboolean firstMouseMovement = true;
 GLdouble last_time, act_time;
 GLfloat lightDir_offset = 0.0f;
 
@@ -116,6 +118,9 @@ void windowResizeCallback(GLFWwindow* window, int width, int height)
 
 	//set Viewport transform
 	glViewport(0, 0, retina_width, retina_height);
+
+    // reset first mouse movement
+    firstMouseMovement = true;
 }
 
 void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mode)
@@ -134,20 +139,29 @@ void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int
 
 void mouseCallback(GLFWwindow* window, double xpos, double ypos)
 {
-	//std::cout << ypos << '\n';
-	delta_x = (GLfloat)xpos;
+    if(firstMouseMovement)
+    {
+        start_x = (GLfloat) xpos;
+        start_y = (GLfloat) ypos;
+        firstMouseMovement = false;
+    }
 
-	// force the delta_y interval
-	delta_y = glm::max(-150.0f, glm::min((GLfloat)ypos, 300.0f));
-	if(ypos > 300.0f)
-	{
-		glfwSetCursorPos(window, xpos, 300.0f);
-	}
-	else
-	if(ypos < -150.0f)
-	{
-		glfwSetCursorPos(window, xpos, -150.0f);
-	}
+    delta_x = (GLfloat)xpos - start_x;
+    delta_y = (GLfloat)ypos - start_y;
+    // std :: cout << delta_x << ' ' << delta_y << '\n';
+
+    float sensitivity = 0.05f;
+    delta_x *= sensitivity;
+    delta_y *= sensitivity;
+
+    if (delta_y > 89.0f){
+        delta_y = 89.0f;
+    }
+    if (delta_y < -89.0f){
+        delta_y = -89.0f;
+    }
+
+    myCamera.rotate(-delta_y, delta_x);
 
 }
 
@@ -210,8 +224,8 @@ bool initOpenGLWindow()
 	}
 
 	//for Mac OS X
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
@@ -414,11 +428,7 @@ void renderScene()
 	//send view matrix to shader
 	view = myCamera.getViewMatrix();
 
-	// get rotation ratios (0.0f -> 0degrees, glWindow* / 2 -> 45 degrees ; must be transformed to radians)
-	GLfloat rotation_x_ratio = 2 * glm::radians(45.0f) * delta_x / glWindowWidth;
-	GLfloat rotation_y_ratio = 2 * glm::radians(45.0f) * delta_y / glWindowHeight;
-	view = glm::rotate(view, rotation_y_ratio, glm::vec3(1.0f, 0.0f, 0.0f));
-	view = glm::rotate(view, rotation_x_ratio, glm::vec3(0.0f, 1.0f, 0.0f));
+
 	glUniformMatrix4fv(glGetUniformLocation(myCustomShader.shaderProgram, "view"),
 		1,
 		GL_FALSE,
@@ -499,10 +509,7 @@ int main(int argc, const char * argv[]) {
 	initSkybox();
 	glCheckError();
 	//glfwSetCursorPos(glWindow, glWindowWidth / 2, glWindowHeight / 2);
-	GLdouble x, y;
-	glfwGetCursorPos(glWindow, &x, &x);
-	delta_x = (GLfloat)x;
-	delta_y = (GLfloat)y;
+	myCamera.rotate(0.0f, 0.0f);
 	act_time = last_time = glfwGetTime();
 	while (!glfwWindowShouldClose(glWindow)) {
 		renderScene();
