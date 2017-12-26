@@ -75,6 +75,14 @@ GLboolean firstMouseMovement = true;
 GLdouble last_time, act_time;
 GLfloat lightDir_offset = 0.0f;
 
+GLfloat fogDensity = 0.005f;
+GLfloat alphaDelta = 0.0f;
+
+GLfloat groundDeltaX = 0.0f, groundDeltaY = 0.0f;
+GLfloat groundMaxDeltaLeft = -10.0f, groundMaxDeltaRight = 10.0f;
+GLfloat groundMaxDeltaDown = -5.0f, groundMaxDeltaUp = 10.0f;
+GLint groundDirectionX = 1, groundDirectionY = 1;  // -1 = left, 1 = right
+
 GLenum glCheckError_(const char *file, int line)
 {
 	GLenum errorCode;
@@ -214,6 +222,22 @@ void processMovement()
 		myCustomShader.useShaderProgram();
 		glUniform3fv(lightDirLoc, 1, glm::value_ptr(lightDirTr));
 	}
+
+    if(pressedKeys[GLFW_KEY_KP_ADD])
+    {
+        fogDensity = glm::min(fogDensity + 0.0001f, 1.0f);
+
+    }
+
+    if(pressedKeys[GLFW_KEY_KP_SUBTRACT])
+    {
+        fogDensity = glm::max(fogDensity - 0.0001f, 0.0f);
+    }
+
+    if(pressedKeys[GLFW_KEY_1])
+    {
+        alphaDelta -= 0.001f;
+    }
 }
 
 bool initOpenGLWindow()
@@ -267,6 +291,8 @@ void initOpenGLState()
 	glViewport(0, 0, retina_width, retina_height);
 
 	glEnable(GL_DEPTH_TEST); // enable depth-testing
+    // glEnable(GL_BLEND);
+    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDepthFunc(GL_LESS); // depth-testing interprets a smaller value as "closer"
 	//glEnable(GL_CULL_FACE); // cull face
 	glCullFace(GL_BACK); // cull back face
@@ -418,6 +444,7 @@ void renderScene()
 	//render the scene (second pass)
 
 	myCustomShader.useShaderProgram();
+    glUniform1f(glGetUniformLocation(myCustomShader.shaderProgram, "fogDensity"), fogDensity);
 
 	//send lightSpace matrix to shader
 	glUniformMatrix4fv(glGetUniformLocation(myCustomShader.shaderProgram, "lightSpaceTrMatrix"),
@@ -464,16 +491,32 @@ void renderScene()
 	island.Draw(myCustomShader);
 
 	//create model matrix for ground
-	model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -250.0f, 0.0f));
+	// model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -250.0f, 0.0f));
 	//send model matrix data to shader
-	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+	// glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
 	//create normal matrix
+    model = glm::translate(model, glm::vec3(groundDeltaX, 7.0f + groundDeltaY, 0.0f));
+    model = glm::scale(model, glm::vec3(10.0f, 10.0f, 10.0f));
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 	normalMatrix = glm::mat3(glm::inverseTranspose(view*model));
 	//send normal matrix data to shader
 	glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
 
-	//ground.Draw(myCustomShader);
+    ground.Draw(myCustomShader);
+
+    groundDeltaX += 0.01f * groundDirectionX;
+    if(groundDeltaX <= groundMaxDeltaLeft || groundDeltaX >= groundMaxDeltaRight)
+    {
+        groundDirectionX *= -1;
+    }
+
+    groundDeltaY += 0.03f * groundDirectionY;
+    if(groundDeltaY <= groundMaxDeltaDown || groundDeltaY >= groundMaxDeltaUp)
+    {
+        groundDirectionY *= -1;
+    }
+    // std::cout << groundDelta << ' ' << groundMaxDelta << ' ' << glm::abs(groundDelta) - groundMaxDelta << '\n';
 
 	lightAngle += 0.1f;
 	if (lightAngle > 360.0f)
@@ -490,12 +533,14 @@ void renderScene()
 
 	model = glm::rotate(glm::mat4(1.0f), glm::radians(lightAngle), glm::vec3(1.0f, 0.0f, 0.0f));
 	model = glm::translate(model, lightDir);
-	model = glm::scale(model, glm::vec3(0.05f, 0.05f, 0.05f));
+	model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
 	glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
 	lightCube.Draw(lightShader);
 
-	//mySkyBox.Draw(skyboxShader, view, projection);
+	mySkyBox.Draw(skyboxShader, view, projection);
+
+
 }
 
 int main(int argc, const char * argv[]) {

@@ -1,4 +1,4 @@
-#version 410 core
+#version 330
 
 layout(location=0) in vec3 vPosition;
 layout(location=1) in vec3 vNormal;
@@ -14,7 +14,7 @@ uniform mat4 view;
 uniform mat4 projection;
 uniform mat4 lightSpaceTrMatrix;
 
-void main() 
+void main()
 {
 	//compute eye space coordinates
 	fragPosEye = view * model * vec4(vPosition, 1.0f);

@@ -1,4 +1,4 @@
-#version 410 core
+#version 330
 
 in vec3 normal;
 in vec4 fragPosEye;
@@ -15,6 +15,7 @@ uniform	vec3 lightDir;
 uniform sampler2D diffuseTexture;
 uniform sampler2D specularTexture;
 uniform sampler2D shadowMap;
+uniform float fogDensity;
 
 vec3 ambient;
 float ambientStrength = 0.2f;
@@ -73,7 +74,6 @@ float computeShadow()
 
 float computeFog()
 {
-	float fogDensity = 0.005f;
 	float fragmentDistance = length(fragPosEye);
 	float fogFactor = exp(-pow(fragmentDistance * fogDensity, 2));
 	return clamp(fogFactor, 0.0f, 1.0f);
@@ -88,6 +88,7 @@ void main()
 	//modulate with diffuse map
 	ambient *= vec3(texture(diffuseTexture, fragTexCoords));
 	diffuse *= vec3(texture(diffuseTexture, fragTexCoords));
+
 	//modulate woth specular map
 	specular *= vec3(texture(specularTexture, fragTexCoords));
 
