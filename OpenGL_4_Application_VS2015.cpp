@@ -23,6 +23,7 @@
 #include "Model3D.hpp"
 #include "Mesh.hpp"
 #include "SkyBox.hpp"
+#include "RainDrop.hpp"
 
 int glWindowWidth = 640;
 int glWindowHeight = 480;
@@ -82,6 +83,9 @@ GLfloat groundDeltaX = 0.0f, groundDeltaY = 0.0f;
 GLfloat groundMaxDeltaLeft = -10.0f, groundMaxDeltaRight = 10.0f;
 GLfloat groundMaxDeltaDown = -5.0f, groundMaxDeltaUp = 10.0f;
 GLint groundDirectionX = 1, groundDirectionY = 1;  // -1 = left, 1 = right
+
+gps::Shader rainDropShader;
+std::vector<RainDrop> raindrops;
 
 GLenum glCheckError_(const char *file, int line)
 {
@@ -346,6 +350,7 @@ void initShaders()
 	myCustomShader.loadShader("shaders/shaderStart.vert", "shaders/shaderStart.frag");
 	lightShader.loadShader("shaders/lightCube.vert", "shaders/lightCube.frag");
 	depthMapShader.loadShader("shaders/simpleDepthMap.vert", "shaders/simpleDepthMap.frag");
+    rainDropShader.loadShader("shaders/rainDrop.vert", "shaders/rainDrop.frag");
 }
 
 void initUniforms()
@@ -540,6 +545,12 @@ void renderScene()
 
 	mySkyBox.Draw(skyboxShader, view, projection);
 
+    for(int i=0; i<raindrops.size(); i++)
+    {
+        raindrops[i].Draw(rainDropShader);
+        raindrops[i].applyWeight();
+    }
+
 
 }
 
@@ -556,6 +567,11 @@ int main(int argc, const char * argv[]) {
 	//glfwSetCursorPos(glWindow, glWindowWidth / 2, glWindowHeight / 2);
 	myCamera.rotate(0.0f, 0.0f);
 	act_time = last_time = glfwGetTime();
+    for(int i=0; i<1024; i++)
+    {
+        RainDrop d(GLfloat(std::rand() % 200 - 100), 20.0f, GLfloat(std::rand() % 200 - 100), 2.0f, 5.0f);
+        raindrops.push_back(d);
+    }
 	while (!glfwWindowShouldClose(glWindow)) {
 		renderScene();
 
