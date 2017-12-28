@@ -88,6 +88,9 @@ GLint groundDirectionX = 1, groundDirectionY = 1;  // -1 = left, 1 = right
 RainManager rain(-50.0f, 1.0f);
 
 gps::Model3D docks;
+gps::Model3D barrel;
+gps::Model3D lantern;
+gps::Model3D bottle;
 
 GLenum glCheckError_(const char *file, int line)
 {
@@ -361,6 +364,9 @@ void initModels()
 	lightCube = gps::Model3D("objects/cube/cube.obj", "objects/cube/");
 	island = gps::Model3D("objects/tropical_island/tropical_island.obj", "objects/tropical_island/");
     docks = gps::Model3D("objects/old_house/old_house.obj", "objects/old_house/");
+    barrel = gps::Model3D("objects/barrel/barrel.obj", "objects/barrel/");
+    lantern = gps::Model3D("objects/lantern/lantern.obj", "objects/lantern/");
+    bottle = gps::Model3D("objects/bottle/bottle.obj", "objects/bottle/");
 }
 
 void initShaders()
@@ -529,6 +535,9 @@ void renderScene()
     model = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
     docks.Draw(myCustomShader);
+    barrel.Draw(myCustomShader);
+    lantern.Draw(myCustomShader);
+    bottle.Draw(myCustomShader);
 
     groundDeltaX += 0.01f * groundDirectionX;
     if(groundDeltaX <= groundMaxDeltaLeft || groundDeltaX >= groundMaxDeltaRight)
