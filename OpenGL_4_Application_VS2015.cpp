@@ -87,6 +87,8 @@ GLint groundDirectionX = 1, groundDirectionY = 1;  // -1 = left, 1 = right
 
 RainManager rain(-50.0f, 1.0f);
 
+gps::Model3D docks;
+
 GLenum glCheckError_(const char *file, int line)
 {
 	GLenum errorCode;
@@ -358,6 +360,7 @@ void initModels()
 	ground = gps::Model3D("objects/ground/ground.obj", "objects/ground/");
 	lightCube = gps::Model3D("objects/cube/cube.obj", "objects/cube/");
 	island = gps::Model3D("objects/tropical_island/tropical_island.obj", "objects/tropical_island/");
+    docks = gps::Model3D("objects/old_house/old_house.obj", "objects/old_house/");
 }
 
 void initShaders()
@@ -384,7 +387,7 @@ void initUniforms()
 	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
 	//set the light direction (direction towards the light)
-	lightDir = glm::vec3(0.0f, 3.0f, 6.0f);
+	lightDir = glm::vec3(0.0f, 500.0f, 200.0f);
 	lightDirLoc = glGetUniformLocation(myCustomShader.shaderProgram, "lightDir");
 	glUniform3fv(lightDirLoc, 1, glm::value_ptr(lightDir));
 
@@ -505,8 +508,8 @@ void renderScene()
 
 	myModel.Draw(myCustomShader);
 
-	model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -50.0f, 0.0f));
-	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+	// model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -50.0f, 0.0f));
+	// glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 	island.Draw(myCustomShader);
 
 	//create model matrix for ground
@@ -515,14 +518,17 @@ void renderScene()
 	// glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
 	//create normal matrix
-    model = glm::translate(model, glm::vec3(groundDeltaX, 7.0f + groundDeltaY, 0.0f));
-    model = glm::scale(model, glm::vec3(10.0f, 10.0f, 10.0f));
+    model = glm::translate(glm::mat4(1.0f), glm::vec3(groundDeltaX, groundDeltaY, 0.0f));
+    // model = glm::scale(model, glm::vec3(20.0f, 20.0f, 20.0f));
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 	normalMatrix = glm::mat3(glm::inverseTranspose(view*model));
 	//send normal matrix data to shader
 	glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
 
     ground.Draw(myCustomShader);
+    model = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+    docks.Draw(myCustomShader);
 
     groundDeltaX += 0.01f * groundDirectionX;
     if(groundDeltaX <= groundMaxDeltaLeft || groundDeltaX >= groundMaxDeltaRight)
@@ -552,12 +558,13 @@ void renderScene()
 
 	model = glm::rotate(glm::mat4(1.0f), glm::radians(lightAngle), glm::vec3(1.0f, 0.0f, 0.0f));
 	model = glm::translate(model, lightDir);
-	model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+	model = glm::scale(model, glm::vec3(1.5f, 1.5f, 1.5f));
 	glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
 	lightCube.Draw(lightShader);
 
 	mySkyBox.Draw(skyboxShader, view, projection);
+
 
     if(rain.is_raining())
     {
