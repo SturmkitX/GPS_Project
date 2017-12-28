@@ -1,8 +1,8 @@
 CC = g++
-CFLAGS = -O2 -std=c++11
+CFLAGS = -std=c++11
 LFLAGS = -lGL -lGLEW -lglfw
 OUTEXEC = iesire
-OBJS = Camera.o Model3D.o Mesh.o Shader.o SkyBox.o stb_image.o OpenGL_4_Application_VS2015.o RainDrop.o
+OBJS = Camera.o Model3D.o Mesh.o Shader.o SkyBox.o stb_image.o OpenGL_4_Application_VS2015.o RainManager.o
 
 all: iesire
 
@@ -30,8 +30,8 @@ stb_image.o: stb_image.c stb_image.h
 OpenGL_4_Application_VS2015.o: OpenGL_4_Application_VS2015.cpp
 	$(CC) $(CFLAGS) -c OpenGL_4_Application_VS2015.cpp
 
-RainDrop.o: RainDrop.cpp
-	$(CC) $(CFLAGS) -c RainDrop.cpp
+RainManager.o: RainManager.cpp
+	$(CC) $(CFLAGS) -c RainManager.cpp
 
 clean:
 	rm $(OUTEXEC)

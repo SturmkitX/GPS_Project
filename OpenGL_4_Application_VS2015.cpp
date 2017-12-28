@@ -23,7 +23,8 @@
 #include "Model3D.hpp"
 #include "Mesh.hpp"
 #include "SkyBox.hpp"
-#include "RainDrop.hpp"
+#include "RainManager.hpp"
+#include <ctime>
 
 int glWindowWidth = 640;
 int glWindowHeight = 480;
@@ -84,8 +85,7 @@ GLfloat groundMaxDeltaLeft = -10.0f, groundMaxDeltaRight = 10.0f;
 GLfloat groundMaxDeltaDown = -5.0f, groundMaxDeltaUp = 10.0f;
 GLint groundDirectionX = 1, groundDirectionY = 1;  // -1 = left, 1 = right
 
-gps::Shader rainDropShader;
-std::vector<RainDrop> raindrops;
+RainManager rain(-50.0f, 1.0f);
 
 GLenum glCheckError_(const char *file, int line)
 {
@@ -240,7 +240,22 @@ void processMovement()
 
     if(pressedKeys[GLFW_KEY_1])
     {
-        alphaDelta -= 0.001f;
+        rain.setRaining(true);
+    }
+
+    if(pressedKeys[GLFW_KEY_2])
+    {
+        rain.setRaining(false);
+    }
+
+    if(pressedKeys[GLFW_KEY_3])
+    {
+        rain.increaseDensity();
+    }
+
+    if(pressedKeys[GLFW_KEY_4])
+    {
+        rain.decreaseDensity();
     }
 }
 
@@ -350,7 +365,6 @@ void initShaders()
 	myCustomShader.loadShader("shaders/shaderStart.vert", "shaders/shaderStart.frag");
 	lightShader.loadShader("shaders/lightCube.vert", "shaders/lightCube.frag");
 	depthMapShader.loadShader("shaders/simpleDepthMap.vert", "shaders/simpleDepthMap.frag");
-    rainDropShader.loadShader("shaders/rainDrop.vert", "shaders/rainDrop.frag");
 }
 
 void initUniforms()
@@ -545,11 +559,14 @@ void renderScene()
 
 	mySkyBox.Draw(skyboxShader, view, projection);
 
-    for(int i=0; i<raindrops.size(); i++)
+    if(rain.is_raining())
     {
-        raindrops[i].Draw(rainDropShader);
-        raindrops[i].applyWeight();
+        rain.Draw(myCustomShader);
+        rain.applyWeight();
+        // printf("Rain drops: %u\n", rain.getNoDrops());
     }
+
+
 
 
 }
@@ -565,13 +582,9 @@ int main(int argc, const char * argv[]) {
 	initSkybox();
 	glCheckError();
 	//glfwSetCursorPos(glWindow, glWindowWidth / 2, glWindowHeight / 2);
+    std::srand(std::time(0));
 	myCamera.rotate(0.0f, 0.0f);
 	act_time = last_time = glfwGetTime();
-    for(int i=0; i<1024; i++)
-    {
-        RainDrop d(GLfloat(std::rand() % 200 - 100), 20.0f, GLfloat(std::rand() % 200 - 100), 2.0f, 5.0f);
-        raindrops.push_back(d);
-    }
 	while (!glfwWindowShouldClose(glWindow)) {
 		renderScene();
 
@@ -580,6 +593,7 @@ int main(int argc, const char * argv[]) {
 		glfwPollEvents();
 		glfwSwapBuffers(glWindow);
 	}
+    rain.clear();
 
 	//close GL context and any other GLFW resources
 	glfwTerminate();

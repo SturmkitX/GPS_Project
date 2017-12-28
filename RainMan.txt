@@ -1,0 +1,68 @@
+#include "RainManager.hpp"
+
+RainManager::RainManager(GLfloat disappear_threshold, GLfloat weight)
+{
+    this->disappear_threshold = disappear_threshold;
+    this->weight = weight;
+}
+
+void RainManager::applyWeight()
+{
+    std::list<ModelPos>::iterator it;
+    for(it=rain_drops.begin(); it != rain_drops.end(); it++)
+    {
+        it->offset.y -= weight;    // the object goes down
+    }
+}
+
+void RainManager::Draw(gps::Shader shader)
+{
+    GLuint modelLoc;
+    glm::mat4 model;
+    shader.useShaderProgram();
+
+    std::list<ModelPos>::iterator it = rain_drops.begin();
+
+    while(it != rain_drops.end())
+    {
+        if(it->offset.y > disappear_threshold)
+        {
+            modelLoc = glGetUniformLocation(shader.shaderProgram, "model");
+            model = glm::translate(glm::mat4(1.0f), it->offset);
+            model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f));
+            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+            it->model.Draw(shader);
+
+            it++;
+        }
+        else
+        {
+            printf("List size: %u\n", rain_drops.size());
+            it = rain_drops.erase(it);
+            std::cout << "Successfully erased object\n";
+        }
+
+    }
+
+}
+
+void RainManager::generateDrops(GLuint count, GLuint xRadius, GLuint y, GLuint zRadius)
+{
+    for(int i=0; i<count; i++)
+    {
+        ModelPos aux;
+        aux.model = gps::Model3D("objects/raindrop/jeg2.obj", "objects/raindrop/");
+        glm::vec3 pos;
+        pos.x = GLfloat(std::rand() % (2*xRadius) - xRadius);
+        pos.y = (GLfloat)y;
+        pos.z = GLfloat(std::rand() % (2*zRadius) - zRadius);
+        aux.offset = pos;
+
+        rain_drops.push_back(aux);
+    }
+}
+
+void RainManager::clear()
+{
+    rain_drops.clear();
+}
