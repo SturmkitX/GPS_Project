@@ -16,13 +16,14 @@ uniform sampler2D diffuseTexture;
 uniform sampler2D specularTexture;
 uniform sampler2D shadowMap;
 uniform float fogDensity;
+uniform float diffuseStrength;
+uniform float specularStrength;
+uniform float shininess;
 
 vec3 ambient;
 float ambientStrength = 0.2f;
 vec3 diffuse;
 vec3 specular;
-float specularStrength = 0.5f;
-float shininess = 64.0f;
 
 vec3 o;
 
@@ -46,7 +47,7 @@ void computeLightComponents()
 	ambient = ambientStrength * lightColor;
 
 	//compute diffuse light
-	diffuse = max(dot(normalEye, lightDirN), 0.0f) * lightColor;
+	diffuse = max(dot(normalEye, lightDirN), 0.0f) * lightColor * diffuseStrength;
 
 	//compute specular light
 	float specCoeff = pow(max(dot(halfVector, normalEye), 0.0f), shininess);

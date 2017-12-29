@@ -91,6 +91,15 @@ gps::Model3D docks;
 gps::Model3D barrel;
 gps::Model3D lantern;
 gps::Model3D bottle;
+gps::Model3D lightCube2;
+gps::Model3D lightCube3;
+gps::Model3D princess;
+
+glm::vec3 lightDir2(-210.0f, 20.0f, -150.0f);
+GLfloat lightAngle2 = 0.0f;
+GLfloat diffuseStrength = 1.0f;
+glm::vec3 lightDir3(-200.0f, 30.0f, -180.0f);
+GLfloat lightAngle3 = 0.0f;
 
 GLenum glCheckError_(const char *file, int line)
 {
@@ -357,6 +366,17 @@ glm::mat4 computeLightSpaceTrMatrix()
 	return lightProjection * lightView;
 }
 
+glm::mat4 computeLightSpaceTrMatrix2()
+{
+	const GLfloat near_plane = 1.0f, far_plane = 10.0f;
+	glm::mat4 lightProjection = glm::ortho(-20.0f, 20.0f, -20.0f, 20.0f, near_plane, far_plane);
+
+	glm::vec3 lightDirTr = glm::vec3(glm::rotate(glm::mat4(1.0f), glm::radians(lightAngle2), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::vec4(lightDir2, 1.0f));
+	glm::mat4 lightView = glm::lookAt(lightDirTr, myCamera.getCameraTarget(), glm::vec3(0.0f, 1.0f, 0.0f));
+
+	return lightProjection * lightView;
+}
+
 void initModels()
 {
 	myModel = gps::Model3D("objects/nanosuit/nanosuit.obj", "objects/nanosuit/");
@@ -367,6 +387,9 @@ void initModels()
     barrel = gps::Model3D("objects/barrel/barrel.obj", "objects/barrel/");
     lantern = gps::Model3D("objects/lantern/lantern.obj", "objects/lantern/");
     bottle = gps::Model3D("objects/bottle/bottle.obj", "objects/bottle/");
+    lightCube2 = gps::Model3D("objects/cube/cube.obj", "objects/cube/");
+    lightCube3 = gps::Model3D("objects/cube/cube.obj", "objects/cube/");
+    princess = gps::Model3D("objects/princess_leia/leia.obj", "objects/princess_leia/");
 }
 
 void initShaders()
@@ -495,6 +518,9 @@ void renderScene()
 	glUniformMatrix3fv(lightDirMatrixLoc, 1, GL_FALSE, glm::value_ptr(lightDirMatrix));
 
 	glViewport(0, 0, retina_width, retina_height);
+    glUniform1f(glGetUniformLocation(myCustomShader.shaderProgram, "diffuseStrength"), 1.0f);
+    glUniform1f(glGetUniformLocation(myCustomShader.shaderProgram, "specularStrength"), 0.5f);
+    glUniform1f(glGetUniformLocation(myCustomShader.shaderProgram, "shininess"), 64.0f);
 	myCustomShader.useShaderProgram();
 
 	//bind the depth map
@@ -534,10 +560,34 @@ void renderScene()
     ground.Draw(myCustomShader);
     model = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+    glUniform1f(glGetUniformLocation(myCustomShader.shaderProgram, "diffuseStrength"), 3.0f);
+    glUniform1f(glGetUniformLocation(myCustomShader.shaderProgram, "specularStrength"), 0.8f);
+    glUniform1f(glGetUniformLocation(myCustomShader.shaderProgram, "shininess"), 128.0f);
+
+    /*depthMapShader.useShaderProgram();
+
+	glUniformMatrix4fv(glGetUniformLocation(depthMapShader.shaderProgram, "lightSpaceTrMatrix"),
+		1,
+		GL_FALSE,
+		glm::value_ptr(computeLightSpaceTrMatrix2()));
+    model = glm::translate(glm::mat4(1.0f), glm::vec3(-206.0f, -135.0f, 6.5f));
+    glUniformMatrix4fv(glGetUniformLocation(depthMapShader.shaderProgram, "model"),
+    	1,
+    	GL_FALSE,
+    	glm::value_ptr(model));
+
+    // docks.Draw(depthMapShader);
+    barrel.Draw(depthMapShader);
+    lantern.Draw(depthMapShader);
+    bottle.Draw(depthMapShader);*/
+
+    myCustomShader.useShaderProgram();
+
     docks.Draw(myCustomShader);
     barrel.Draw(myCustomShader);
     lantern.Draw(myCustomShader);
     bottle.Draw(myCustomShader);
+    princess.Draw(myCustomShader);
 
     groundDeltaX += 0.01f * groundDirectionX;
     if(groundDeltaX <= groundMaxDeltaLeft || groundDeltaX >= groundMaxDeltaRight)
@@ -572,8 +622,31 @@ void renderScene()
 
 	lightCube.Draw(lightShader);
 
-	mySkyBox.Draw(skyboxShader, view, projection);
 
+    lightAngle2 += 0.5f;
+	if (lightAngle2 > 360.0f)
+		lightAngle2 -= 360.0f;
+	lightDirTr = glm::vec3(glm::rotate(glm::mat4(1.0f), glm::radians(lightAngle2), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::vec4(lightDir2, 1.0f));
+	myCustomShader.useShaderProgram();
+	glUniform3fv(lightDirLoc, 1, glm::value_ptr(lightDirTr));
+
+    lightShader.useShaderProgram();
+
+
+    model = glm::translate(glm::mat4(1.0f), glm::vec3(-207.0f, 18.0f, -135.0f));
+    model = glm::rotate(model, glm::radians(lightAngle2), glm::vec3(0.0f, 1.0f, 0.0f));
+    model = glm::translate(model, glm::vec3(207.0f, -18.0f, 135.0f));
+    model = glm::translate(model, lightDir2);
+
+
+    glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+	lightCube2.Draw(lightShader);
+
+    model = glm::translate(glm::mat4(1.0f), lightDir3);
+    glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+	lightCube3.Draw(lightShader);
+
+	mySkyBox.Draw(skyboxShader, view, projection);
 
     if(rain.is_raining())
     {
@@ -581,9 +654,6 @@ void renderScene()
         rain.applyWeight();
         // printf("Rain drops: %u\n", rain.getNoDrops());
     }
-
-
-
 
 }
 
