@@ -78,7 +78,7 @@ GLdouble last_time, act_time;
 GLfloat lightDir_offset = 0.0f;
 
 GLfloat fogDensity = 0.005f;
-GLfloat alphaDelta = 0.0f;
+GLfloat alphaFactor = 0.5f;
 
 GLfloat groundDeltaX = 0.0f, groundDeltaY = 0.0f;
 GLfloat groundMaxDeltaLeft = -10.0f, groundMaxDeltaRight = 10.0f;
@@ -285,6 +285,16 @@ void processMovement()
     {
         drawWireframe = false;
     }
+
+    if(pressedKeys[GLFW_KEY_LEFT_BRACKET])
+    {
+        alphaFactor = std::max(0.0f, alphaFactor - 0.02f);
+    }
+
+    if(pressedKeys[GLFW_KEY_RIGHT_BRACKET])
+    {
+        alphaFactor = std::min(1.0f, alphaFactor + 0.02f);
+    }
 }
 
 bool initOpenGLWindow()
@@ -338,8 +348,6 @@ void initOpenGLState()
 	glViewport(0, 0, retina_width, retina_height);
 
 	glEnable(GL_DEPTH_TEST); // enable depth-testing
-    // glEnable(GL_BLEND);
-    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glDepthFunc(GL_LESS); // depth-testing interprets a smaller value as "closer"
 	//glEnable(GL_CULL_FACE); // cull face
 	glCullFace(GL_BACK); // cull back face
@@ -572,7 +580,6 @@ void renderScene()
 	//send normal matrix data to shader
 	glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
 
-    ground.Draw(myCustomShader);
     model = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
     glUniform1f(glGetUniformLocation(myCustomShader.shaderProgram, "diffuseStrength"), 3.0f);
@@ -685,6 +692,16 @@ void renderScene()
         rain.applyWeight();
         // printf("Rain drops: %u\n", rain.getNoDrops());
     }
+
+    // transparent objects should be rendered after the opaque ones
+    myCustomShader.useShaderProgram();
+    glUniform1f(glGetUniformLocation(myCustomShader.shaderProgram, "alphaFactor"), alphaFactor);
+    model = glm::translate(glm::mat4(1.0f), glm::vec3(groundDeltaX, groundDeltaY, 0.0f));
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    ground.Draw(myCustomShader);
+    glDisable(GL_BLEND);
 
 }
 

@@ -19,6 +19,7 @@ uniform float fogDensity;
 uniform float diffuseStrength;
 uniform float specularStrength;
 uniform float shininess;
+uniform float alphaFactor;
 
 vec3 ambient;
 float ambientStrength = 0.2f;
@@ -98,6 +99,6 @@ void main()
 
 	float fogFactor = computeFog();
 	vec4 fogColor = vec4(0.5f, 0.5f, 0.5f, 1.0f);
-	fColor = mix(fogColor, color, fogFactor);
+	fColor = vec4(mix(fogColor, color, fogFactor).xyz, alphaFactor);
     //fColor = vec4(o, 1.0f);
 }
