@@ -94,12 +94,16 @@ gps::Model3D bottle;
 gps::Model3D lightCube2;
 gps::Model3D lightCube3;
 gps::Model3D princess;
+gps::Model3D diamond;
 
 glm::vec3 lightDir2(-210.0f, 20.0f, -150.0f);
 GLfloat lightAngle2 = 0.0f;
 GLfloat diffuseStrength = 1.0f;
 glm::vec3 lightDir3(-200.0f, 30.0f, -180.0f);
 GLfloat lightAngle3 = 0.0f;
+
+GLboolean drawWireframe = false;
+GLfloat diamondRotation = 0.0f;
 
 GLenum glCheckError_(const char *file, int line)
 {
@@ -271,6 +275,16 @@ void processMovement()
     {
         rain.decreaseDensity();
     }
+
+    if(pressedKeys[GLFW_KEY_5])
+    {
+        drawWireframe = true;
+    }
+
+    if(pressedKeys[GLFW_KEY_6])
+    {
+        drawWireframe = false;
+    }
 }
 
 bool initOpenGLWindow()
@@ -390,6 +404,7 @@ void initModels()
     lightCube2 = gps::Model3D("objects/cube/cube.obj", "objects/cube/");
     lightCube3 = gps::Model3D("objects/cube/cube.obj", "objects/cube/");
     princess = gps::Model3D("objects/princess_leia/leia.obj", "objects/princess_leia/");
+    diamond = gps::Model3D("objects/diamond/Diamond.obj", "objects/diamond/");
 }
 
 void initShaders()
@@ -584,10 +599,26 @@ void renderScene()
     myCustomShader.useShaderProgram();
 
     docks.Draw(myCustomShader);
-    barrel.Draw(myCustomShader);
+
     lantern.Draw(myCustomShader);
     bottle.Draw(myCustomShader);
+
+    if(drawWireframe == true)
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
+
+    barrel.Draw(myCustomShader);
     princess.Draw(myCustomShader);
+
+    model = glm::translate(glm::mat4(1.0f), glm::vec3(-530.0f, 279.0f, 0.0f));
+    model = glm::rotate(model, glm::radians(diamondRotation), glm::vec3(0.0f, 1.0f, 0.0f));
+    model = glm::translate(model, glm::vec3(530.0f, -279.0f, 0.0f));
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+    diamond.Draw(myCustomShader);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    diamondRotation += 1.0f;
 
     groundDeltaX += 0.01f * groundDirectionX;
     if(groundDeltaX <= groundMaxDeltaLeft || groundDeltaX >= groundMaxDeltaRight)
