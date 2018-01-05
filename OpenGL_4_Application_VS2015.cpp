@@ -105,6 +105,10 @@ GLfloat lightAngle3 = 0.0f;
 GLboolean drawWireframe = false;
 GLfloat diamondRotation = 0.0f;
 
+GLFWmonitor* monitor;
+const GLFWvidmode* vidMode;
+GLboolean isFullscreen = false;
+
 GLenum glCheckError_(const char *file, int line)
 {
 	GLenum errorCode;
@@ -295,6 +299,18 @@ void processMovement()
     {
         alphaFactor = std::min(1.0f, alphaFactor + 0.02f);
     }
+
+	if(pressedKeys[GLFW_KEY_F] && !isFullscreen)
+	{
+		glfwSetWindowSize(glWindow, vidMode->width, vidMode->height);
+		isFullscreen = true;
+	}
+
+	if(pressedKeys[GLFW_KEY_G] && isFullscreen)
+	{
+		glfwSetWindowSize(glWindow, glWindowWidth, glWindowHeight);
+		isFullscreen = false;
+	}
 }
 
 bool initOpenGLWindow()
@@ -719,6 +735,9 @@ int main(int argc, const char * argv[]) {
     std::srand(std::time(0));
 	myCamera.rotate(0.0f, 0.0f);
 	act_time = last_time = glfwGetTime();
+	monitor = glfwGetPrimaryMonitor();
+	vidMode = glfwGetVideoMode(monitor);
+
 	while (!glfwWindowShouldClose(glWindow)) {
 		renderScene();
 
