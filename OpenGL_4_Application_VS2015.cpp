@@ -85,14 +85,13 @@ GLfloat groundMaxDeltaLeft = -10.0f, groundMaxDeltaRight = 10.0f;
 GLfloat groundMaxDeltaDown = -5.0f, groundMaxDeltaUp = 10.0f;
 GLint groundDirectionX = 1, groundDirectionY = 1;  // -1 = left, 1 = right
 
-RainManager rain(-50.0f, 1.0f);
+RainManager rain(-50.0f, 3.0f);
 
 gps::Model3D docks;
 gps::Model3D barrel;
 gps::Model3D lantern;
 gps::Model3D bottle;
 gps::Model3D lightCube2;
-gps::Model3D lightCube3;
 gps::Model3D princess;
 gps::Model3D diamond;
 
@@ -302,14 +301,36 @@ void processMovement()
 
 	if(pressedKeys[GLFW_KEY_F] && !isFullscreen)
 	{
-		glfwSetWindowSize(glWindow, vidMode->width, vidMode->height);
+		// glfwSetWindowSize(glWindow, vidMode->width, vidMode->height);
+		glfwSetWindowMonitor(glWindow, monitor, 0, 0, vidMode->width, vidMode->height, vidMode->refreshRate);
 		isFullscreen = true;
 	}
 
 	if(pressedKeys[GLFW_KEY_G] && isFullscreen)
 	{
-		glfwSetWindowSize(glWindow, glWindowWidth, glWindowHeight);
+		// glfwSetWindowSize(glWindow, glWindowWidth, glWindowHeight);
+		glfwSetWindowMonitor(glWindow, NULL, vidMode->width / 4, vidMode->height / 4, glWindowWidth, glWindowHeight, 0);
 		isFullscreen = false;
+	}
+
+	if(pressedKeys[GLFW_KEY_9])
+	{
+		rain.setWindActive(true);
+	}
+
+	if(pressedKeys[GLFW_KEY_0])
+	{
+		rain.setWindActive(false);
+	}
+
+	if(pressedKeys[GLFW_KEY_RIGHT])
+	{
+		rain.rotateWindDirection(1.0f);
+	}
+
+	if(pressedKeys[GLFW_KEY_UP])
+	{
+		rain.addWindPower(0.05f);
 	}
 }
 
@@ -426,7 +447,6 @@ void initModels()
     lantern = gps::Model3D("objects/lantern/lantern.obj", "objects/lantern/");
     bottle = gps::Model3D("objects/bottle/bottle.obj", "objects/bottle/");
     lightCube2 = gps::Model3D("objects/cube/cube.obj", "objects/cube/");
-    lightCube3 = gps::Model3D("objects/cube/cube.obj", "objects/cube/");
     princess = gps::Model3D("objects/princess_leia/leia.obj", "objects/princess_leia/");
     diamond = gps::Model3D("objects/diamond/Diamond.obj", "objects/diamond/");
 }
@@ -631,6 +651,21 @@ void renderScene()
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     }
 
+	depthMapShader.useShaderProgram();
+	glUniformMatrix4fv(glGetUniformLocation(depthMapShader.shaderProgram, "lightSpaceTrMatrix"),
+		1,
+		GL_FALSE,
+		glm::value_ptr(computeLightSpaceTrMatrix2()));
+	glUniformMatrix4fv(glGetUniformLocation(depthMapShader.shaderProgram, "model"),
+		1,
+		GL_FALSE,
+		glm::value_ptr(glm::vec3(0.0f)));
+
+
+	barrel.Draw(depthMapShader);
+	princess.Draw(depthMapShader);
+
+	myCustomShader.useShaderProgram();
     barrel.Draw(myCustomShader);
     princess.Draw(myCustomShader);
 
@@ -683,22 +718,24 @@ void renderScene()
 	lightDirTr = glm::vec3(glm::rotate(glm::mat4(1.0f), glm::radians(lightAngle2), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::vec4(lightDir2, 1.0f));
 	myCustomShader.useShaderProgram();
 	glUniform3fv(lightDirLoc, 1, glm::value_ptr(lightDirTr));
+	//send lightSpace matrix to shader
+	// glUniformMatrix4fv(glGetUniformLocation(myCustomShader.shaderProgram, "lightSpaceTrMatrix"),
+	// 	1,
+	// 	GL_FALSE,
+	// 	glm::value_ptr(computeLightSpaceTrMatrix2()));
 
     lightShader.useShaderProgram();
 
 
-    model = glm::translate(glm::mat4(1.0f), glm::vec3(-207.0f, 18.0f, -135.0f));
+    model = glm::translate(glm::mat4(1.0f), lightDir2);
     model = glm::rotate(model, glm::radians(lightAngle2), glm::vec3(0.0f, 1.0f, 0.0f));
-    model = glm::translate(model, glm::vec3(207.0f, -18.0f, 135.0f));
+    model = glm::translate(model, -lightDir2);
     model = glm::translate(model, lightDir2);
+
 
 
     glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
 	lightCube2.Draw(lightShader);
-
-    model = glm::translate(glm::mat4(1.0f), lightDir3);
-    glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
-	lightCube3.Draw(lightShader);
 
 	mySkyBox.Draw(skyboxShader, view, projection);
 

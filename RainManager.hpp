@@ -24,6 +24,9 @@ public:
     void clear();
     GLboolean is_raining();
     void setRaining(GLboolean value);
+    void rotateWindDirection(GLfloat angle);
+    void addWindPower(GLfloat power);
+    void setWindActive(GLboolean value);
 
 private:
     GLfloat disappear_threshold;
@@ -34,6 +37,11 @@ private:
 
     GLint xRadius, yRadius, zRadius;
     GLint minSpawnY;
+
+    GLfloat windDirectionAngle;
+    GLfloat windPower;
+    GLboolean windActive;
+    GLfloat rainDropAngle;
     void generateDrops(GLuint count);
 
 };
