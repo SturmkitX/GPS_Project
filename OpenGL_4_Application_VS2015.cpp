@@ -108,6 +108,15 @@ GLFWmonitor* monitor;
 const GLFWvidmode* vidMode;
 GLboolean isFullscreen = false;
 
+gps::Model3D helicopter_base;
+gps::Model3D helicopter_blades1;
+gps::Model3D helicopter_blades2;
+glm::vec3 heli_base_origpos(-0.4f, 284.3f, 649.7f);
+glm::vec3 heli_blades1_origpos(-0.47f, 301.4f, 624.8f);
+glm::vec3 heli_blades2_origpos(4.8f, 302.8f, 713.7f);
+GLfloat heli_base_offset = 0.0f;
+GLfloat heli_blades_angle = 0.0f;
+
 GLenum glCheckError_(const char *file, int line)
 {
 	GLenum errorCode;
@@ -328,9 +337,19 @@ void processMovement()
 		rain.rotateWindDirection(1.0f);
 	}
 
+	if(pressedKeys[GLFW_KEY_LEFT])
+	{
+		rain.rotateWindDirection(-1.0f);
+	}
+
 	if(pressedKeys[GLFW_KEY_UP])
 	{
 		rain.addWindPower(0.05f);
+	}
+
+	if(pressedKeys[GLFW_KEY_DOWN])
+	{
+		rain.addWindPower(-0.05f);
 	}
 }
 
@@ -441,7 +460,7 @@ void initModels()
 	myModel = gps::Model3D("objects/nanosuit/nanosuit.obj", "objects/nanosuit/");
 	ground = gps::Model3D("objects/ground/ground.obj", "objects/ground/");
 	lightCube = gps::Model3D("objects/cube/cube.obj", "objects/cube/");
-	island = gps::Model3D("objects/tropical_island/tropical_island.obj", "objects/tropical_island/");
+	island = gps::Model3D("objects/tropical_island/tropical_island2.obj", "objects/tropical_island/");
     docks = gps::Model3D("objects/old_house/old_house.obj", "objects/old_house/");
     barrel = gps::Model3D("objects/barrel/barrel.obj", "objects/barrel/");
     lantern = gps::Model3D("objects/lantern/lantern.obj", "objects/lantern/");
@@ -449,6 +468,9 @@ void initModels()
     lightCube2 = gps::Model3D("objects/cube/cube.obj", "objects/cube/");
     princess = gps::Model3D("objects/princess_leia/leia.obj", "objects/princess_leia/");
     diamond = gps::Model3D("objects/diamond/Diamond.obj", "objects/diamond/");
+	helicopter_base = gps::Model3D("objects/helicopter/helicopter_base.obj", "objects/helicopter/");
+	helicopter_blades1 = gps::Model3D("objects/helicopter/helicopter_blades1.obj", "objects/helicopter/");
+	helicopter_blades2 = gps::Model3D("objects/helicopter/helicopter_blades2.obj", "objects/helicopter/");
 }
 
 void initShaders()
@@ -745,6 +767,33 @@ void renderScene()
         rain.applyWeight();
         // printf("Rain drops: %u\n", rain.getNoDrops());
     }
+
+	myCustomShader.useShaderProgram();
+
+	// tanslate the helicopter and rotate the blades
+	model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, heli_base_offset));
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+	helicopter_base.Draw(myCustomShader);
+
+	model = glm::translate(glm::mat4(1.0f), heli_blades1_origpos + glm::vec3(0.0f, 0.0f, heli_base_offset));
+	model = glm::rotate(model, glm::radians(heli_blades_angle), glm::vec3(0.0f, 1.0f, 0.0f));
+	model = glm::translate(model, -(heli_blades1_origpos + glm::vec3(0.0f, 0.0f, heli_base_offset)));
+	model = glm::translate(model, glm::vec3(0.0f, 0.0f, heli_base_offset));
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+	helicopter_blades1.Draw(myCustomShader);
+
+	model = glm::translate(glm::mat4(1.0f), heli_blades2_origpos + glm::vec3(0.0f, 0.0f, heli_base_offset));
+	model = glm::rotate(model, glm::radians(-heli_blades_angle), glm::vec3(1.0f, 0.0f, 0.0f));
+	model = glm::translate(model, -(heli_blades2_origpos + glm::vec3(0.0f, 0.0f, heli_base_offset)));
+	model = glm::translate(model, glm::vec3(0.0f, 0.0f, heli_base_offset));
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+	helicopter_blades2.Draw(myCustomShader);
+
+	// move the helicopter base
+	// model =
+
+	heli_base_offset -= 1.0f;
+	heli_blades_angle += 3.0f;
 
     // transparent objects should be rendered after the opaque ones
     myCustomShader.useShaderProgram();
