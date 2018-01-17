@@ -19,6 +19,7 @@ public:
     RainManager(GLfloat disappear_threshold, GLfloat weight);
     void Draw(gps::Shader shader);
     void applyWeight();
+    void addWeight(GLfloat weight);
     void increaseDensity();
     void decreaseDensity();
     void clear();
@@ -34,6 +35,8 @@ private:
     std::list<ModelPos> rain_drops;
     GLboolean raining;
     GLuint density;
+
+    GLfloat minWeight, maxWeight;
 
     GLint xRadius, yRadius, zRadius;
     GLint minSpawnY;

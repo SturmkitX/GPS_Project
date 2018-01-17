@@ -14,6 +14,8 @@ RainManager::RainManager(GLfloat disappear_threshold, GLfloat weight)
     this->windPower = 0.0f;
     this->windActive = false;
     this->rainDropAngle = 0.0f;
+    this->minWeight = 0.5f;
+    this->maxWeight = 10.0f;
 }
 
 void RainManager::applyWeight()
@@ -135,4 +137,9 @@ void RainManager::addWindPower(GLfloat power)
 void RainManager::setWindActive(GLboolean value)
 {
     windActive = value;
+}
+
+void RainManager::addWeight(GLfloat weight)
+{
+    this->weight = std::min(std::max(this->weight + weight, minWeight), maxWeight);
 }

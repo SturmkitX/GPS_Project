@@ -368,6 +368,26 @@ void processMovement()
 	{
 		mouseAnimationEnabled = false;
 	}
+
+	if(pressedKeys[GLFW_KEY_Z])
+	{
+		myModel = gps::Model3D("objects/stone/stone.obj", "objects/stone/");
+	}
+
+	if(pressedKeys[GLFW_KEY_X])
+	{
+		myModel = gps::Model3D("objects/stone/stone_lowpoly.obj", "objects/stone/");
+	}
+
+	if(pressedKeys[GLFW_KEY_C])
+	{
+		rain.addWeight(-0.5f);
+	}
+
+	if(pressedKeys[GLFW_KEY_V])
+	{
+		rain.addWeight(0.5f);
+	}
 }
 
 bool initOpenGLWindow()
@@ -474,7 +494,7 @@ glm::mat4 computeLightSpaceTrMatrix2()
 
 void initModels()
 {
-	myModel = gps::Model3D("objects/nanosuit/nanosuit.obj", "objects/nanosuit/");
+	myModel = gps::Model3D("objects/stone/stone.obj", "objects/stone/");
 	ground = gps::Model3D("objects/ground/ground.obj", "objects/ground/");
 	lightCube = gps::Model3D("objects/cube/cube.obj", "objects/cube/");
 	island = gps::Model3D("objects/tropical_island/tropical_island2.obj", "objects/tropical_island/");
@@ -573,6 +593,8 @@ void renderScene()
 
 	//create model matrix for nanosuit
 	model = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0, 1, 0));
+	model = glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 10.0f, 10.0f));
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 	//send model matrix to shader
 	glUniformMatrix4fv(glGetUniformLocation(depthMapShader.shaderProgram, "model"),
 		1,
@@ -630,19 +652,23 @@ void renderScene()
 	glUniform1i(glGetUniformLocation(myCustomShader.shaderProgram, "shadowMap"), 3);
 
 	//create model matrix for nanosuit
-	model = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0, 1, 0));
+	model = glm::mat4(1.0f);
 	//send model matrix data to shader
-	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+	// glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
 	//compute normal matrix
 	normalMatrix = glm::mat3(glm::inverseTranspose(view*model));
 	//send normal matrix data to shader
 	glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
-
+	model = glm::rotate(glm::mat4(1.0f), glm::radians(angle), glm::vec3(0, 1, 0));
+	model = glm::scale(model, glm::vec3(10.0f, 10.0f, 10.0f));
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 	myModel.Draw(myCustomShader);
 
 	// model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -50.0f, 0.0f));
 	// glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+	model = glm::mat4(1.0f);
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 	island.Draw(myCustomShader);
 
 	//create model matrix for ground
@@ -664,22 +690,22 @@ void renderScene()
     glUniform1f(glGetUniformLocation(myCustomShader.shaderProgram, "specularStrength"), 0.8f);
     glUniform1f(glGetUniformLocation(myCustomShader.shaderProgram, "shininess"), 128.0f);
 
-    /*depthMapShader.useShaderProgram();
+    depthMapShader.useShaderProgram();
 
 	glUniformMatrix4fv(glGetUniformLocation(depthMapShader.shaderProgram, "lightSpaceTrMatrix"),
 		1,
 		GL_FALSE,
 		glm::value_ptr(computeLightSpaceTrMatrix2()));
-    model = glm::translate(glm::mat4(1.0f), glm::vec3(-206.0f, -135.0f, 6.5f));
-    glUniformMatrix4fv(glGetUniformLocation(depthMapShader.shaderProgram, "model"),
-    	1,
-    	GL_FALSE,
-    	glm::value_ptr(model));
-
-    // docks.Draw(depthMapShader);
-    barrel.Draw(depthMapShader);
-    lantern.Draw(depthMapShader);
-    bottle.Draw(depthMapShader);*/
+    // model = glm::translate(glm::mat4(1.0f), glm::vec3(-206.0f, -135.0f, 6.5f));
+    // glUniformMatrix4fv(glGetUniformLocation(depthMapShader.shaderProgram, "model"),
+    // 	1,
+    // 	GL_FALSE,
+    // 	glm::value_ptr(model));
+    //
+    // // docks.Draw(depthMapShader);
+    // barrel.Draw(depthMapShader);
+    // lantern.Draw(depthMapShader);
+    // bottle.Draw(depthMapShader);
 
     myCustomShader.useShaderProgram();
 
@@ -754,7 +780,7 @@ void renderScene()
 	model = glm::scale(model, glm::vec3(1.5f, 1.5f, 1.5f));
 	glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
-	lightCube.Draw(lightShader);
+	// lightCube.Draw(lightShader);
 
 
     lightAngle2 += 0.5f;
@@ -780,7 +806,7 @@ void renderScene()
 
 
     glUniformMatrix4fv(glGetUniformLocation(lightShader.shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
-	lightCube2.Draw(lightShader);
+	// lightCube2.Draw(lightShader);
 
 	mySkyBox.Draw(skyboxShader, view, projection);
 
@@ -845,7 +871,7 @@ void renderScene()
 	model = glm::translate(glm::mat4(1.0f), glm::vec3(-190.0f, 50.0f, -178.0f));
 	model = glm::scale(model, glm::vec3(0.002f, 1.0f, 0.002f));
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-	ground_extension.Draw(myCustomShader);
+	// ground_extension.Draw(myCustomShader);
 
     // transparent objects should be rendered after the opaque ones
     myCustomShader.useShaderProgram();
