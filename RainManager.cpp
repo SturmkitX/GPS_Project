@@ -77,7 +77,7 @@ void RainManager::generateDrops(GLuint count)
     for(int i=0; i<count; i++)
     {
         ModelPos aux;
-        aux.model = gps::Model3D("objects/raindrop/jeg_lowpoly.obj", "objects/raindrop/");
+        aux.model = gps::Model3D("objects/raindrop/rain_lowpoly.obj", "objects/raindrop/");
         glm::vec3 pos;
         pos.x = GLfloat(std::rand() % (2*xRadius) - xRadius);
         pos.y = (GLfloat)(std::rand() % yRadius + minSpawnY);
