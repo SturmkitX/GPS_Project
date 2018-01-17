@@ -53,12 +53,13 @@ void RainManager::Draw(gps::Shader shader)
         model = glm::mat4(1.0f);
         if(windActive)
         {
-            windDirection = glm::mat4(0.0f);
+            windDirection = glm::mat4(1.0f);
             windDirection[0].x = windPower;
+            // windDirection[2].z = 1.0f;
             windDirection = glm::rotate(windDirection, glm::radians(windDirectionAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 
-            aux = glm::normalize(glm::cross(glm::vec3(windDirection[0].x, 0.0f, windDirection[2].z), glm::vec3(0.0f, 1.0f, 0.0f)));
-            model = glm::rotate(model, glm::radians(45.0f), aux);
+            aux = glm::normalize(glm::cross(glm::vec3(windDirection[0].x, windDirection[1].y, windDirection[2].z), glm::vec3(0.0f, 1.0f, 0.0f)));
+            model = glm::rotate(model, glm::radians(rainDropAngle), aux);
             model = glm::translate(model, glm::vec3(windDirection[0].x * 5.0f, 0.0f, windDirection[2].z * 5.0f));
         }
         model = glm::translate(model, it->offset);

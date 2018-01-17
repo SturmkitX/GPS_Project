@@ -117,6 +117,13 @@ glm::vec3 heli_blades2_origpos(4.8f, 302.8f, 713.7f);
 GLfloat heli_base_offset = 0.0f;
 GLfloat heli_blades_angle = 0.0f;
 
+GLfloat autoMouseAngle = 0.0f;
+GLint autoMouseDirection = 1;
+GLboolean mouseAnimationEnabled = false;
+
+gps::Model3D sun;
+gps::Model3D ground_extension;
+
 GLenum glCheckError_(const char *file, int line)
 {
 	GLenum errorCode;
@@ -351,6 +358,16 @@ void processMovement()
 	{
 		rain.addWindPower(-0.05f);
 	}
+
+	if(pressedKeys[GLFW_KEY_7])
+	{
+		mouseAnimationEnabled = true;
+	}
+
+	if(pressedKeys[GLFW_KEY_8])
+	{
+		mouseAnimationEnabled = false;
+	}
 }
 
 bool initOpenGLWindow()
@@ -471,6 +488,8 @@ void initModels()
 	helicopter_base = gps::Model3D("objects/helicopter/helicopter_base.obj", "objects/helicopter/");
 	helicopter_blades1 = gps::Model3D("objects/helicopter/helicopter_blades1.obj", "objects/helicopter/");
 	helicopter_blades2 = gps::Model3D("objects/helicopter/helicopter_blades2.obj", "objects/helicopter/");
+	sun = gps::Model3D("objects/sun/sun.obj", "objects/sun/");
+	ground_extension = gps::Model3D("objects/ground/ground_extension.obj", "objects/ground/");
 }
 
 void initShaders()
@@ -497,7 +516,8 @@ void initUniforms()
 	glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
 	//set the light direction (direction towards the light)
-	lightDir = glm::vec3(0.0f, 500.0f, 200.0f);
+	// lightDir = glm::vec3(0.0f, 500.0f, 200.0f);
+	lightDir = glm::vec3(0.0f, 0.0f, 0.0f);
 	lightDirLoc = glGetUniformLocation(myCustomShader.shaderProgram, "lightDir");
 	glUniform3fv(lightDirLoc, 1, glm::value_ptr(lightDir));
 
@@ -513,12 +533,12 @@ void initUniforms()
 void initSkybox()
 {
 	std::vector<const GLchar*> faces;
-	faces.push_back("textures/skybox/right.tga");
-	faces.push_back("textures/skybox/left.tga");
-	faces.push_back("textures/skybox/top.tga");
-	faces.push_back("textures/skybox/bottom.tga");
-	faces.push_back("textures/skybox/back.tga");
-	faces.push_back("textures/skybox/front.tga");
+	faces.push_back("textures/sor_beach/beach_rt.JPG");
+	faces.push_back("textures/sor_beach/beach_lf.JPG");
+	faces.push_back("textures/sor_beach/beach_up.JPG");
+	faces.push_back("textures/sor_beach/beach_dn.JPG");
+	faces.push_back("textures/sor_beach/beach_bk.JPG");
+	faces.push_back("textures/sor_beach/beach_ft.JPG");
 
 	mySkyBox.Load(faces);
 	skyboxShader.loadShader("shaders/skyboxShader.vert", "shaders/skyboxShader.frag");
@@ -686,6 +706,9 @@ void renderScene()
 
 	barrel.Draw(depthMapShader);
 	princess.Draw(depthMapShader);
+	bottle.Draw(depthMapShader);
+	docks.Draw(depthMapShader);
+
 
 	myCustomShader.useShaderProgram();
     barrel.Draw(myCustomShader);
@@ -794,6 +817,35 @@ void renderScene()
 
 	heli_base_offset -= 1.0f;
 	heli_blades_angle += 3.0f;
+	// printf("%.2f\n", heli_base_offset);
+	if(heli_base_offset < -2500.0f)
+	{
+		heli_base_offset = 500.0f;
+	}
+
+	if(mouseAnimationEnabled)
+	{
+		myCamera.move(gps::MOVE_FORWARD, 0.5f);
+		myCamera.rotate(0.0f, autoMouseAngle);
+
+		autoMouseAngle += 0.5f * autoMouseDirection;
+		if(std::abs(autoMouseAngle) > 30.0f)
+		{
+			autoMouseDirection *= -1;
+		}
+	}
+
+
+	model = glm::rotate(glm::mat4(1.0f), glm::radians(lightAngle), glm::vec3(1.0f, 0.0f, 0.0f));
+	model = glm::translate(model, glm::vec3(0.0f, 1000.0f, 0.0f));
+	model = glm::scale(model, glm::vec3(25.0f, 25.0f, 25.0f));
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+	sun.Draw(myCustomShader);
+
+	model = glm::translate(glm::mat4(1.0f), glm::vec3(-190.0f, 50.0f, -178.0f));
+	model = glm::scale(model, glm::vec3(0.002f, 1.0f, 0.002f));
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+	ground_extension.Draw(myCustomShader);
 
     // transparent objects should be rendered after the opaque ones
     myCustomShader.useShaderProgram();
