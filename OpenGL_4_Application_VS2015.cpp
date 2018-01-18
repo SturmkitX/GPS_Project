@@ -851,11 +851,28 @@ void renderScene()
 
 	if(mouseAnimationEnabled)
 	{
-		myCamera.move(gps::MOVE_FORWARD, 0.5f);
-		myCamera.rotate(0.0f, autoMouseAngle);
+		GLdouble xpos, ypos;
+		glfwGetCursorPos(glWindow, &xpos, &ypos);
+	    delta_x = (GLfloat)xpos - start_x + autoMouseAngle;
+	    delta_y = (GLfloat)ypos - start_y;
+	    // std :: cout << delta_x << ' ' << delta_y << '\n';
 
-		autoMouseAngle += 0.5f * autoMouseDirection;
-		if(std::abs(autoMouseAngle) > 30.0f)
+	    float sensitivity = 0.05f;
+	    delta_x *= sensitivity;
+	    delta_y *= sensitivity;
+
+	    if (delta_y > 89.0f){
+	        delta_y = 89.0f;
+	    }
+	    if (delta_y < -89.0f){
+	        delta_y = -89.0f;
+	    }
+
+	    myCamera.rotate(-delta_y, delta_x);
+		myCamera.move(gps::MOVE_FORWARD, 0.5f);
+
+		autoMouseAngle += 1.5f * autoMouseDirection;
+		if(std::abs(autoMouseAngle) > 60.0f)
 		{
 			autoMouseDirection *= -1;
 		}
